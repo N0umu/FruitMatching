@@ -1,12 +1,28 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, {
+  StyleSheet,
+} from 'react-native';
+import Homescreen from './screens/homescreen';
+import Game from './screens/game';
+import {NavigationContainer} from "@react-navigation/native";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import { Provider } from 'react-redux';
+import { PaperProvider } from 'react-native-paper';
+import Store from './store/configStore';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={Store}>
+      <PaperProvider> 
+        <NavigationContainer>
+        <Stack.Navigator>
+        <Stack.Screen name="Game" component={Game}/>
+        <Stack.Screen name="Homescreen" component={Homescreen}/>
+        </Stack.Navigator>
+      </NavigationContainer>
+      </PaperProvider>
+    </Provider>
   );
 }
 

@@ -1,0 +1,579 @@
+import React from "react";
+import {StyleSheet, View, Image, TouchableOpacity,Text,Button} from 'react-native';
+import { connect } from 'react-redux';
+import { randomNumber } from "../untils/untils";
+
+import { ProgressBar, MD3Colors } from 'react-native-paper';
+
+class Grille extends React.Component {
+    constructor(props) {
+        super(props)
+        const pause = this.props
+        this.state = {
+            grille: [],
+            niveau: 1,
+            score: 0,
+            totalscore: 0,
+            progress: 0.50,
+            pause: false,
+            lastLine:null,
+            lastCol:null,
+
+        }
+    }
+
+    componentDidMount() {
+
+        // Création de la grille
+        let grille = [] ;
+        do{
+            for (let i = 0; i < 8; i++) {
+                grille[i] = [];
+                for (let j = 0; j < 8; j++) {
+                    grille[i][j] = randomNumber(8);
+                }
+            }
+        }while(this.testCol(grille) || this.testRow(grille))
+
+
+        this.setState({grille: grille});
+        this.intervalId = setInterval(() => {
+            this.timescore();
+        }, 2000);
+
+    }
+    componentWillUnmount() {
+        clearInterval(this.intervalId);
+    }
+
+
+    componentDidUpdate() {
+        const currentGame = this.props.currentGame
+        const user = this.props.user
+        if ((this.state.score != currentGame.score) || (this.state.niveau != currentGame.niveau))  {
+            const action = {type: "ADD_CURRENTGAME", value:{id: user.id, score: this.state.totalscore, niveau: this.state.niveau, gameover: false}}
+            this.props.dispatch(action)
+            // console.log(currentGame)
+        }
+
+    }
+// componentDidUpdate(prevProps) {
+//     const currentGame = this.props.currentGame
+//     const user = this.props.user
+//     if ((this.state.score !== currentGame.score || this.state.niveau !== currentGame.niveau) && (this.props.currentGame !== prevProps.currentGame)) {
+//         const action = {type: "ADD_CURRENTGAME", value:{id: user.id, score: this.state.totalscore, niveau: this.state.niveau, gameover: false}}
+//         this.props.dispatch(action)
+//     }
+// }
+    ////////////////////////// Fonctions //////////////////////////
+
+   // Vérification si il y a une ligne de 3 ou plus
+    testRow(grille) {
+        let qte = 1;
+        for(let i = 0; i < grille.length; i++) {
+            qte = 1;
+            for(let j=0; j < grille.length - 1; j++) {
+                if(grille[i][j] == grille[i][j+1]) {
+                    qte++;
+                } else if (qte >= 3) {
+                    return true;
+                } else {
+                    qte = 1;
+                }
+            }
+            if (qte >= 3) { // Ajout de cette ligne pour vérifier si la ligne contient 3 éléments identiques
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    // Vérification si il y a une colonne de 3 ou plus
+    testCol(grille) {
+        let qte = 1;
+        for(let i = 0; i < grille.length; i++) {
+            qte = 1;
+            for(let j=0; j < grille.length - 1; j++) { // Vérifier que j < grille.length - 1 pour éviter de dépasser les limites du tableau
+                if(grille[j][i] == grille[j+1][i]) {
+                    qte++;
+                } else if (qte >= 3) {
+                    return true;
+                } else {
+                    qte = 1;
+                }
+            }
+            if (qte >= 3) { //  vérifier si la colonne contient 3 éléments identiques
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    // fonction pour vérifier si deux cases sont en diagonale
+    isdiagonal(line1, col1, line2, col2) {
+        const rowDiff = Math.abs(line1 - line2); // différence de ligne
+        const colDiff = Math.abs(col1 - col2); // différence de colonne
+        return rowDiff === colDiff; // si les deux différences sont égales alors les cases sont en diagonale
+    }
+
+    casesSwitch(line1, col1, line2, col2) {
+        if ((line1 == line2 + 1 || line1 == line2 - 1 || line1 == line2) && (col1 == col2 + 1 || col1 == col2 - 1 || col1 == col2)) {
+            if (!(this.isdiagonal(line1, col1, line2, col2))) {
+                let newGrille = [...this.state.grille];
+                let tempGrille = [...newGrille];
+                let caseValue = tempGrille[line1][col1];
+                tempGrille[line1][col1] = tempGrille[line2][col2];
+                tempGrille[line2][col2] = caseValue;
+
+                // Vérifier si une combinaison horizontale a été créée
+                if (this.testRow(tempGrille)) {
+                    this.checkLines(newGrille, line1, col1, line2, col2);
+                    if (this.checkEnd(newGrille)) { // Vérifier s'il reste des combinaisons sur la grille
+                        this.setState({ grille: newGrille, score: this.state.score, totalscore: this.state.totalscore });
+                    }
+                } else if (this.testCol(tempGrille)) { // Vérifier si une combinaison verticale a été créée
+                    this.checkLines(newGrille, line1, col1, line2, col2);
+                    if (this.checkEnd(newGrille)) { // Vérifier s'il reste des combinaisons sur la grille
+                        this.setState({ grille: newGrille, score: this.state.score, totalscore: this.state.totalscore });
+                    }
+                } else {
+                    caseValue = newGrille[line1][col1];
+                    newGrille[line1][col1] = newGrille[line2][col2];
+                    newGrille[line2][col2] = caseValue;
+                    this.setState({ grille: newGrille, score: this.state.score, totalscore: this.state.totalscore });
+                }
+            }
+        }
+        this.setState({lastLine:null, lastCol:null});
+    }
+
+
+    checkEnd(grille) { //
+        let hasCombos = false;
+        do {
+            hasCombos = false;
+            // Vérifier les lignes
+            for (let i = 0; i < grille.length; i++) {
+                for (let j = 0; j < grille[i].length - 2; j++) {
+                    if (grille[i][j] === grille[i][j+1] && grille[i][j] === grille[i][j+2]) {// Vérifier si la ligne contient 3 éléments identiques
+                        this.checkLines(grille, i, j);
+                        hasCombos = true;
+                    }
+                }
+            }
+            // Vérifier les colonnes
+            for (let i = 0; i < grille.length; i++) {
+                for (let j = 0; j < grille[i].length - 2; j++) {
+                    if (grille[j][i] === grille[j+1][i] && grille[j][i] === grille[j+2][i]) { // Vérifier si la colonne contient 3 éléments identiques
+                        this.checkLines(grille, j, i);
+                        hasCombos = true;
+
+                        // console.log("Colonne:", i, "Ligne:", j);
+
+                    }
+                }
+            }
+        } while (hasCombos);
+        // Vérifier si la grille est vide
+        for (let i = 0; i < grille.length; i++) {
+            for (let j = 0; j < grille[i].length; j++) {
+                if (grille[i][j] !== 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    checkcol(grille, initGrille, p) {// fonction pour vérifier si la grille contient des lignes ou des colonnes de 3 ou plus
+        let newGrille = grille;// on récupère la grille
+        let compteur = 1;  // initialisation du compteur
+        let indexLine = initGrille;  // on récupère les lignes
+        let indexCol = [] // initialisation des colonnes
+        let points = p; // on récupère les points
+
+        for (let line = 0; line < newGrille.length; line++) {
+
+
+            compteur = 1;
+            for (let col = 1; col < newGrille.length; col++) {
+
+
+                // console.log("Ligne:", line, "Colonne:", col, "Valeur:", newGrille[line][col]);
+
+                if (newGrille[col][line] === newGrille[col - 1][line]) {
+                    compteur++;
+                    if (compteur >= 3) {
+                        points += compteur * 5;
+                        for (let g = 0; g < compteur; g++) {
+                            indexCol.push([col - g, line]);
+                        }
+                    }
+
+                }
+                else if (compteur >= 3) {
+                    points += compteur * 5;
+                    for (let g = 1; g < compteur + 1; g++) {
+                        indexCol.push([col - g, line]);
+                    }
+                    compteur = 1;
+                }
+                else {
+                    compteur = 1;
+                }
+            }
+        }
+
+        // console.log("Index des colonnes:", indexCol); // Afficher les index des colonnes
+        // console.log("Index des lignes:", indexLine); // Afficher les index des lignes
+
+        // console.log("Points:", points); // Afficher les points
+
+        this.setState((prevState) => ({
+            score: prevState.score + points,
+            totalscore: prevState.totalscore + points,
+        }));
+
+        if (points > 0) {
+            this.transform(newGrille, indexCol, indexLine);
+        }
+    }
+
+    transform(grille, lineInGrille, ColInGrille) {// fonction pour transformer les lignes et les colonnes en 0
+        let newGrille = grille;// on récupère la grille
+        let lineIndex = lineInGrille; // on récupère les lignes
+        let ColIndex = ColInGrille  // on récupère les colonnes
+
+        for (let i = 0; i < lineIndex.length; i++) { // on parcourt les lignes
+            newGrille[lineIndex[i][0]][lineIndex[i][1]] = 0;  // on remplace les valeurs des lignes par des 0
+        }
+        for (let i = 0; i < ColIndex.length; i++) { // on parcourt les colonnes
+            newGrille[ColIndex[i][0]][ColIndex[i][1]] = 0;    // on remplace les valeurs des colonnes par des 0
+        }
+        this.replace(newGrille);  // on remplace les 0 par des nombres aléatoires
+    }
+
+    replace(grille) { // fonction pour remplacer les 0 par des nombres aléatoires
+        let newGrille = grille; // on récupère la grille
+        let Initvar = true; // initialisation de la variable szero
+        while (Initvar) { // tant qu'il y a des 0
+            Initvar = false;  // on met szero à false
+            for (let i = 0; i < newGrille.length; i++) {
+                for (let j = 0; j < newGrille.length; j++) {
+                    if (newGrille[j][i] === 0) {
+                        let jValue = j;//
+                        while (jValue > 0 && newGrille[jValue - 1][i] === 0) {
+                            jValue--;
+                        }
+                        if (jValue === 0) {
+                            newGrille[j][i] = randomNumber(8);
+
+                        } else {
+                            newGrille[j][i] = newGrille[jValue - 1][i];
+                            newGrille[jValue - 1][i] = 0;
+
+                        }
+                        Initvar = true;
+                    }
+                }
+            }
+        }
+        //this.calculProgress();
+        this.setState({ grille: newGrille }); // on met à jour la grille
+    }
+
+    checkLines(grille) {// fonction pour vérifier si la grille contient des lignes ou des colonnes de 3 ou plus
+        let newGrille = grille;
+        let compteur = 1;
+        let indexLine = [];
+        let points = 0;
+
+        for (let li = 0; li < newGrille.length; li++) {
+            compteur = 1;
+            for (let col = 1; col < newGrille.length; col++) {
+                if (newGrille[li][col] === newGrille[li][col - 1]) {
+                    compteur++;
+                    if (compteur >= 3) {
+                        let score = 0;
+                        if (compteur === 3) {
+                            score = 50 * this.state.niveau;
+                        } else if (compteur === 4) {
+                            score = 150 * this.state.niveau;
+                        } else if (compteur >= 5) {
+                            score = 500 * this.state.niveau;
+                        }
+                        points += score;
+                        for (let g = 0; g < compteur; g++) {
+                            indexLine.push([li, col - g]);
+                        }
+                    }
+                } else if (compteur >= 3) {
+                    let score = 0;
+                    if (compteur === 3) {
+                        score = 50 * this.state.niveau;
+                    } else if (compteur === 4) {
+                        score = 150 * this.state.niveau;
+                    } else if (compteur >= 5) {
+                        score = 500 * this.state.niveau;
+                    }
+                    points += score;
+                    for (let g = 1; g < compteur + 1; g++) {
+                        indexLine.push([li, col - g]);
+                    }
+                    compteur = 1;
+                } else {
+                    compteur = 1;
+                }
+            }
+        }
+        this.setState((prevState) => ({
+            score: prevState.score + points,
+            totalscore: prevState.totalscore + points,
+        }));
+        this.checkcol(newGrille, indexLine, points)
+    }
+
+
+
+    calculProgress() { // fonction pour calculer la progression
+        let progValue = this.state.score / 100;
+        this.setState({ progress: progValue });
+        //console.log("Progression:", progValue);
+    }
+
+    timescore() { // fonction pour calculer le score en temps réel
+        if(this.state.pause == false){
+            let multiplier = this.state.niveau * 1;
+            if(this.state.score>=100){
+                this.setState({score:50});
+                this.calcprog();
+            }else if(this.state.score<=0){
+                 //this.gameover();
+                return;
+            }
+            let scoreCalcule = (this.state.score - (3+multiplier));
+            this.setState({ score:scoreCalcule})
+            this.calcprog();
+        }
+
+    }
+
+    hint() {
+        let grille = this.state.grille;
+        let line1 = -1;
+        let col1 = -1;
+        let line2 = -1;
+        let col2 = -1;
+        for (let i = 0; i < grille.length; i++) {
+            for (let j = 0; j < grille[i].length - 1; j++) {
+                if (grille[i][j] === grille[i][j + 1] + 1 && grille[i][j + 1] === grille[i][j + 2] - 1) {
+                    line1 = i;
+                    col1 = j;
+                    line2 = i;
+                    col2 = j + 2;
+                    break;
+                } else if (grille[i][j] === grille[i][j + 1] - 1 && grille[i][j + 1] === grille[i][j + 2] + 1) {
+                    line1 = i;
+                    col1 = j + 2;
+                    line2 = i;
+                    col2 = j;
+                    break;
+                }
+            }
+            if (line1 !== -1 && col1 !== -1 && line2 !== -1 && col2 !== -1) {
+                break;
+            }
+        }
+        if (line1 === -1 && col1 === -1 && line2 === -1 && col2 === -1) {
+            for (let i = 0; i < grille.length; i++) {
+                for (let j = 0; j < grille[i].length - 1; j++) {
+                    if (grille[i][j] === grille[i][j + 1] + 1 && grille[i][j + 1] === grille[i][j + 2] - 1) {
+                        line1 = i;
+                        col1 = j + 1;
+                        line2 = i;
+                        col2 = j + 1;
+                        break;
+                    } else if (grille[i][j] === grille[i][j + 1] - 1 && grille[i][j + 1] === grille[i][j + 2] + 1) {
+                        line1 = i;
+                        col1 = j + 1;
+                        line2 = i;
+                        col2 = j + 1;
+                        break;
+                    }
+                }
+                if (line1 !== -1 && col1 !== -1 && line2 !== -1 && col2 !== -1) {
+                    break;
+                }
+            }
+        }
+        if (line1 !== -1 && col1 !== -1 && line2 !== -1 && col2 !== -1) {
+            this.casesSwitch(line1, col1, line2, col2);
+        } else {
+            this.gameover();
+        }
+    }
+
+
+
+    gameover(){ // fonction pour terminer la partie
+        const user = this.props.user
+        const addCur = {type: "ADD_CURRENTGAME", value:{id: user.id, score: this.state.totalscore, niveau: this.state.niveau, gameover: true}}
+        this.props.dispatch(addCur)
+        const addGame = {type: "ADD_GAME", value:{id: user.id, nom: user.nom, prenom: user.prenom, score: this.state.score}}
+        this.props.dispatch(addGame)
+    }
+
+    calcprog() {
+    let val = (this.state.score / 100) * this.state.niveau;
+    if (val > this.state.niveau) {
+        let newNiveau = Math.ceil(val);
+        this.setState({ niveau: newNiveau, progress: (this.state.score / 100) * newNiveau });
+    } else {
+        this.setState({ progress: val });
+    }
+    }
+
+
+    // fonction pour gérer le clic sur une case
+    caseClick(line, col) {
+
+        // console.log("la grille "+this.state + " la ligne  "+line + " la colonne  "+col)
+
+
+        if (this.state.pause) { // si la partie est en pause
+            return; // on arrête la fonction
+        }
+        if (this.state.lastLine == null) { // si c'est le premier clic
+            this.setState({lastLine: line, lastCol: col}); // on stocke la ligne et la colonne de la case
+        } else { // si c'est le deuxième clic
+            this.casesSwitch( line, col,this.state.lastLine, this.state.lastCol); // on appelle la fonction pour échanger les cases
+            this.setState({lastLine:null, lastCol:null}); // on réinitialise les valeurs de lastLine et lastCol
+        }
+    }
+
+    render () {
+        console.log("Score:", this.state.score);
+        console.log("Niveau:", this.state.niveau)
+        console.log("Progression:", this.state.progress);
+        let {pause} = this.props
+        return ( // on retourne la grille de jeu avec les cases et les images correspondantes
+
+
+            <View style={styles.containerGame}>
+                <View style={pause ? {display: "none"} : ""}>
+                {this.state.grille.map((rows, index) => (
+                    <View key={`row-${index}`} style={styles.lignes} >
+                        {rows.map((nb, i) => {
+
+                            let piece;
+
+                            switch (nb) {    
+                                case 1:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b1.png')} />;
+                                    break;
+                                case 2:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b2.png')} />;
+                                    break;
+                                case 3:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b3.png')} />;
+                                    break;
+                                case 4:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b4.png')} />;
+                                    break;
+                                case 5:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b5.png')} />;
+                                    break;
+                                case 6:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b6.png')} />;
+                                    break;
+                                case 7:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b7.png')} />;
+                                    break;
+                                case 8:
+                                    piece = <Image style={styles.emplacement} source={require('../assets/marveldc/b8.png')} />;
+                                    break;
+                            }
+                            let caseStyle = styles.case;
+                            if (this.state.lastLine === index && this.state.lastCol === i) {
+                                caseStyle = [styles.case, styles.selectedCase];
+                            }
+
+                            return (
+                                <TouchableOpacity key={`col-${i}`} style={styles.touch} onPress={() => this.caseClick(index, i)}>
+                                    <View key={`col-${i}`} style={caseStyle}>
+                                        {piece}
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                ))}
+                <View>
+                <ProgressBar style={styles.progress} progress={this.state.progress} color={MD3Colors.error50} indeterminate={false} />
+                </View>
+                    <View style={styles.header}>
+                        <Text style={styles.title}>Diamond Game</Text>
+                        <Button title="Hint" onPress={() => this.hint()} />
+                        <Button title={pause ? "Resume" : "Pause"} onPress={() => this.pause()} />
+                    </View>
+                </View>
+            </View>
+
+        )
+    }
+}
+
+const styles = StyleSheet.create({
+
+    containerGame: {
+        marginTop: 30,
+        marginBottom: 30,
+        backgroundColor: "white",
+    },
+
+    lignes: {
+        flexDirection: "row"
+    },
+
+    emplacement: {
+        width: 44,
+        height: 44,
+    },
+    touch: {
+        backgroundColor: "pink",
+        height: 50,
+        width: 50
+    },
+
+    case: {
+        width: 47,
+        height: 47,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    m10: {
+        margin: 10
+    },
+    progress: {
+        height: 20,
+        width: 250,
+    },
+    selectedCase: {
+        borderColor: 'red',
+        borderWidth: 2,
+    },
+
+});
+const mapStateProps = (state) => {
+    return {
+        currentGame: state.currentGameReducer.currentGame,
+        user: state.userReducer.users
+    }
+}
+
+export default connect(mapStateProps) (Grille);
