@@ -2,6 +2,7 @@ import { StyleSheet, View, ImageBackground } from 'react-native';
 import React from 'react';
 import {Text, Button, Modal, Portal } from 'react-native-paper';
 import { connect } from 'react-redux';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Board from '../components/board';
 
 
@@ -53,7 +54,9 @@ class Game extends React.Component {
                 </View>
                 {/**/}
                 <View style={styles.container}>
+                    <GestureHandlerRootView style={flex=1}>
                     <Board boardSize={8}></Board>
+                    </GestureHandlerRootView>
                 </View>
 
                 <Portal>

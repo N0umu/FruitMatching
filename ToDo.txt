@@ -1,6 +1,6 @@
--deplacer les fruits
--verification position des fruits
--tableau pour les icons
+++-deplacer les fruits
+++-verification position des fruits
+++-tableau pour les icons
 -verification d'alignements
 -supprimer cases alignées
 -faire tomber les cases restantes
@@ -13,16 +13,5 @@
 
 ok
 
-
-const fruits = [
-  require('./assets/apple.png'),
-  require('./assets/banana.png'),
-  require('./assets/cherry.png'),
-  require('./assets/grapes.png'),
-  require('./assets/lemon.png'),
-  require('./assets/orange.png'),
-  require('./assets/pear.png'),
-  require('./assets/strawberry.png'),
-];
 
 
