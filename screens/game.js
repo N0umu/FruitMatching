@@ -51,7 +51,7 @@ class Game extends React.Component {
                     <Text style= {styles.title} variant="titleLarge">Tries left: 0</Text>
                     <Text style= {styles.title} variant="titleLarge">Score: {this.state.utilisateur.score}</Text>
                 </View>
-
+                {/**/}
                 <View style={styles.container}>
                     <Board boardSize={8}></Board>
                 </View>

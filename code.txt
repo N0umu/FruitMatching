@@ -461,7 +461,7 @@ class Grille extends React.Component {
         let {pause} = this.props
         return ( // on retourne la grille de jeu avec les cases et les images correspondantes
 
-
+//pause
             <View style={styles.containerGame}>
                 <View style={pause ? {display: "none"} : ""}>
                 {this.state.grille.map((rows, index) => (

@@ -4,6 +4,18 @@ import Tile from './tile.js';
 import Utils from './utils.js';
 const colorCount = 5;
 
+
+const fruits = [
+  require('../assets/apple.png'),
+  require('../assets/banana.png'),
+  require('../assets/cherry.png'),
+  require('../assets/grapes.png'),
+  require('../assets/lemon.png'),
+  require('../assets/orange.png'),
+  require('../assets/pear.png'),
+  require('../assets/strawberry.png'),
+]
+
 class Board extends React.Component {
   constructor(props) {
     super(props);
@@ -36,6 +48,24 @@ class Board extends React.Component {
                 {rows.map((nb, i) => {
                   let tile = <Image style={styles.tile} source={require('../assets/Fruit_bg.jpg')} />;
 
+                  if (nb === 1) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[0]} />;
+                  } else if (nb === 2) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[1]} />;
+                  } else if (nb === 3) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[2]} />;
+                  } else if (nb === 4) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[3]} />;
+                  } else if (nb === 5) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[4]} />;
+                  } else if (nb === 6) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[5]} />;
+                  } else if (nb === 7) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[6]} />;
+                  } else if (nb === 8) {
+                    tile = <Image style={[styles.tile, styles.fruit]} source={fruits[7]} />;
+                  }
+
                     return (
                       <TouchableOpacity key={`col-${i}`}>
                         <View key={`col-${i}`} >
@@ -60,14 +90,14 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     alignContent:"center",
     justifyContent:"center",
-    backgroundColor: 'black',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   tile:{
     margin:2,
     width:(Math.floor(Dimensions.get('window').width-30)/ 8),
     height:(Math.floor(Dimensions.get('window').width-30)/ 8),
     borderRadius:5,
-    backgroundColor: '#000000'
+    backgroundColor: 'rgba(240, 205, 223, 0.6)'
   }
 })
 

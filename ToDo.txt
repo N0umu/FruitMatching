@@ -1,0 +1,28 @@
+-deplacer les fruits
+-verification position des fruits
+-tableau pour les icons
+-verification d'alignements
+-supprimer cases alignées
+-faire tomber les cases restantes
+-generer nouvelles cases
+-les scores
+-les niveaux
+-barre de progression
+-mettre en pause
+-Maj user pour les scores en bdd
+
+ok
+
+
+const fruits = [
+  require('./assets/apple.png'),
+  require('./assets/banana.png'),
+  require('./assets/cherry.png'),
+  require('./assets/grapes.png'),
+  require('./assets/lemon.png'),
+  require('./assets/orange.png'),
+  require('./assets/pear.png'),
+  require('./assets/strawberry.png'),
+];
+
+
