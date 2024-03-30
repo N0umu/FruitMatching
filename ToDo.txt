@@ -1,10 +1,10 @@
 ++-deplacer les fruits
 ++-verification position des fruits
 ++-tableau pour les icons
--verification d'alignements
--supprimer cases alignées
--faire tomber les cases restantes
--generer nouvelles cases
+++-verification d'alignements
+++-supprimer cases alignées
+++-faire tomber les cases restantes
+++-generer nouvelles cases
 -les scores
 -les niveaux
 -barre de progression
