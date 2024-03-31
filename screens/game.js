@@ -17,8 +17,7 @@ class Game extends React.Component {
         }
 
     }
-
-
+    
     componentDidUpdate(){
         this.props.leaderboard != this.state.leaderboard ? this.setState({leaderboard: this.props.leaderboard}) : ""
     }

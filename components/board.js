@@ -1,5 +1,6 @@
 import { StyleSheet, View, TouchableOpacity, Dimensions, Image } from 'react-native';
 import React from 'react';
+import { connect } from 'react-redux';
 
 const fruits = [
   require('../assets/apple.png'),
@@ -17,9 +18,14 @@ class Board extends React.Component {
     super(props);
     const boardSize = this.props.boardSize;
     this.state = {
+      score: 0,
       selected: null,
       tiles: this.initializeTiles(boardSize),
     };
+  }
+
+  componentDidMount(){
+    
   }
 
   initializeTiles(size) {
@@ -46,9 +52,14 @@ class Board extends React.Component {
         newTiles[prevRow][prevCol] = temp;
 
         const alignedPositions = this.checkAlignments(newTiles);
-        this.removeAlignedTiles(newTiles, alignedPositions);
+        if(alignedPositions != ""){
+          this.removeAlignedTiles(newTiles, alignedPositions);
 
-        this.setState({ tiles: newTiles, selected: null });
+          this.setState({ tiles: newTiles, selected: null });
+
+          this.setState({score : this.state.score + 10})
+        }
+       
       } else {
         this.setState({ selected: { row, col } });
       }
@@ -203,4 +214,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Board;
+const mapStateProps = (state) => {
+  return {
+      user: state.userReducer.currentU,
+      }
+}
+
+export default connect(mapStateProps) (Board)

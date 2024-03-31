@@ -17,8 +17,8 @@ export default function App() {
       <PaperProvider> 
         <NavigationContainer>
         <Stack.Navigator>
-        <Stack.Screen name="Game" component={Game}/>
         <Stack.Screen name="Homescreen" component={Homescreen}/>
+        <Stack.Screen name="Game" component={Game}/>
         </Stack.Navigator>
       </NavigationContainer>
       </PaperProvider>
